@@ -24,7 +24,6 @@ def main():
     csv_data = pd.read_csv(csv_path)
     subject_ids = csv_data['Subject ID'].unique()
     
-    num_timesteps = 1000
     learning_rate = 0.0001
     batch_size = 2
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

@@ -24,7 +24,6 @@ class TimeEmbedding(nn.Module):
         )
 
     def forward(self, x):
-
         return self.fc(x)
     
 
@@ -68,7 +67,6 @@ class EnergyModel3D(nn.Module):
     
 
 def sigma_t(t):
-
     return sigma_min * (sigma_max / sigma_min)**t
 
 
@@ -130,56 +128,4 @@ def dsm_loss_energy_model(energy_model, x_0, cond_emb, device):
     loss = F.mse_loss(phi_out, target, reduction='mean')
 
     return loss
-
-
-def probability_flow_sampling(score_model, cond_emb, device, steps=50, eps=1e-5, shape=(1,1,256,256)):
-    with torch.no_grad():
-        t_vals = torch.linspace(1.0, eps, steps=steps, device=device)
-        x = sigma_max * torch.randn(shape, device=device)
-        
-        for i in range(steps-1):
-            t = t_vals[i].unsqueeze(0)
-            t_emb = score_model.time_embed(t)
-            cond_out = score_model.cond_fc(cond_emb)
-            
-            # score = Φθ(p(t), t|O)
-            score = score_model(x, t_emb, cond_out)
-            
-
-            dt = t_vals[i+1]-t_vals[i]
-            dsigma_sq_dt = torch.tensor(d_sigma_sq_dt(t.item()), device=device, dtype=torch.float32)
-            sig_t = sigma_t(t.item())
-            d_sigma_dt = dsigma_sq_dt/(2*sig_t)
-            dp_dt = -sig_t * d_sigma_dt * score
-            x = x + dp_dt * dt
-            
-        return x
-
-
-def rank_and_filter_candidates(energy_model, candidates, cond_emb, device, eps=1e-5, prune_ratio=0.2):
-    with torch.no_grad():
-        t = torch.full((candidates.size(0),1), eps, device=device)
-        t_emb = energy_model.time_embed(t)
-        cond_out = energy_model.cond_fc(cond_emb)
-        
-        # Φϕ(p, ε|O)
-        phi_out = energy_model(candidates, t_emb, cond_out)
-        # Energy = <p,Φϕ>
-        B = candidates.size(0)
-        p_flat = candidates.view(B,-1)
-        phi_flat = phi_out.view(B,-1)
-        energy = torch.sum(p_flat * phi_flat, dim=1)
-        
-        # 根据energy排序
-        sorted_energy, indices = torch.sort(energy, descending=True)
-        keep_num = int(B * (1 - prune_ratio))
-        top_indices = indices[:keep_num]
-        
-        top_candidates = candidates[top_indices]
-        top_energies = sorted_energy[:keep_num]
-        
-        weights = F.softmax(top_energies, dim=0).view(-1,1,1,1)
-        final = torch.sum(top_candidates * weights, dim=0, keepdim=True)
-        
-        return final, top_candidates, top_energies
-    
+ 

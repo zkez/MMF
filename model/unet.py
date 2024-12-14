@@ -12,8 +12,8 @@ class UNetBlock3D(nn.Module):
             nn.ReLU()
         )
     def forward(self, x):
-
         return self.conv(x)
+
 
 class UNetModel3D(nn.Module):
     def __init__(self, in_channels, out_channels, base_channels=64):
@@ -52,6 +52,6 @@ class UNetModel3D(nn.Module):
         u1_block = self.up_block1(cat1)   # [B,base_channels,D,H,W]
         
         out = self.final_conv(u1_block)   # [B,out_channels,D,H,W]
-        
+
         return out
     

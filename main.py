@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import sys
 sys.path.append('/home/wangchangmiao/fzj/zk/MFF')
 from dataloader.dataset import  LungNoduleTextDataset
-from model.observer import Runtime_Observer
+from utils.observer import Runtime_Observer
 
 
 def train_model(model, train_loader, val_loader, device, optimizer, BCE_criterion, MSE_criterion, num_epochs, scheduler=None):
